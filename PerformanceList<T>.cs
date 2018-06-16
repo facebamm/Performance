@@ -1,10 +1,13 @@
-[Serializable]
-    public struct PerformanceList<T> : IList<T> {
+  #region PerformanceList 
+    [Serializable]
+    public struct PerformanceList<T> : IPerformanceList<T>, ICollection<T>{
 
         static readonly T[] EmptyArray = new T[0];
         private T[] Items;
 
-        public T this[int index] { get {
+        #region Properties
+        public T this[int index] {
+            get {
                 if ((uint)index >= (uint)Count) throw new ArgumentOutOfRangeException();
                 return Items[index];
             }
@@ -16,9 +19,11 @@
 
         public int Count { get; private set; }
         public bool IsReadOnly { get; }
+        #endregion
 
-        public PerformanceList(int count = 0)  {
-            Items = count == 0 ? EmptyArray : new T[count];
+        #region Constructor
+        public PerformanceList(int count = 0) {
+            Items = new T[count];
             Count = count;
             IsReadOnly = false;
         }
@@ -28,62 +33,118 @@
             Count = count;
             IsReadOnly = false;
         }
+        #endregion
 
+        #region Add
         public void Add(T item) {
+            if (Items == null)
+                Items = EmptyArray;
+
             if (Count == Items.Length) {
-                T[] newItems = new T[Count++];
+                T[] newItems = new T[Count + 1];
                 Array.Copy(Items, 0, newItems, 0, Count);
                 Items = newItems;
             }
 
-            Count += 1;
             Items[Count] = item;
+            Count += 1;
         }
+        public void AddRange(params T[] source) => AddRange(Count, source);
+        public void AddRange(IEnumerable<T> source) => AddRange(Count, source);
+        public void AddRange(int index, IEnumerable<T> source) {
+            if (source == null)
+                throw new ArgumentNullException();
 
-        public void Clear() {
-            if (Items != EmptyArray)
-                Items = EmptyArray;
+            if ((uint)index > (uint)Count)
+                throw new ArgumentOutOfRangeException();
+
+
+            using (IEnumerator<T> en = source.GetEnumerator()) {
+                while (en.MoveNext()) {
+                    Insert(index, en.Current);
+                    index += 1;
+                }
+            }
+
         }
+        #endregion
 
-        public bool Contains(T item) {
+        #region Contains
+        public bool Contains(T item) => Contains(item, 0, Count);
+        public bool Contains(T item, int start) => Contains(item, start, Count);
+        public bool Contains(T item, int start, int end) {
             if (item == null) {
-                for (int i = 0; i < Count; i+=1)
-                    if (Items[i] == null)  return true;
+                for (int i = start; i < end; i += 1)
+                    if (Items[i] == null) return true;
             } else {
                 EqualityComparer<T> c = EqualityComparer<T>.Default;
-                for (int i = 0; i < Count; i+=1)
-                    if (c.Equals(Items[i], item)) return true;
+                using (Enumerator en = new Enumerator(this)) {
+                    while (en.MoveNext()) {
+                        if (c.Equals(en.Current, item)) return true;
+                    }
+                }
             }
             return false;
         }
+        #endregion
+
+        #region Remove
+        private void RemoveAT(int index) => Remove(index);
+
+        public bool Remove(T item) {
+            int itemIndex = IndexOf(item);
+            if (itemIndex < 0) return false;
+            Remove(itemIndex);
+            return true;
+        }
+        public void Remove(int index) {
+            if ((uint)index >= (uint)Count) throw new ArgumentOutOfRangeException();
+            Count -= 1;
+            if (index < Count) {
+                Array.Copy(Items, index + 1, Items, index, Count - index);
+                T[] target = new T[Count];
+                CopyTo(target, 0, Count);
+                Items = target;
+            }
+        }
+        #endregion
+
+        #region CopyTo
         public void CopyTo(T[] targetArray) => CopyTo(targetArray, 0, 0);
         public void CopyTo(T[] targetArray, int arrayIndex) => CopyTo(targetArray, arrayIndex, 0);
         public void CopyTo(T[] targetArray, int arrayIndex, int count) {
             Array.Copy(Items, 0, targetArray, arrayIndex, Count);
         }
+        #endregion
 
+        #region IndexOf
         public int IndexOf(T item) => IndexOf(item, 0, Count);
         public int IndexOf(T item, int start) => IndexOf(item, start, Count);
-        public int IndexOf(T item, int startIndex, int endIndex) {
+        public int IndexOf(T item, int start, int end) {
             int range = Count;
+            if (!Contains(item, start, end))
+                return -1;
 
-            if(startIndex != 0 && endIndex != range)
-               range = startIndex > endIndex 
-                    ? startIndex - endIndex 
-                    : endIndex - startIndex;
-
-            for (int i = 0; i < range; i++) {
-                if (Equals(Items[i], item)) return i;
+            if (start != 0 && end != range)
+                range = start > end
+                     ? start - end
+                     : end - start;
+            EqualityComparer<T> c = EqualityComparer<T>.Default;
+            using (Enumerator en = new Enumerator(this)) {
+                while (en.MoveNext()) {
+                    if (c.Equals(en.Current, item)) return en.CurrentIndex;
+                }
             }
 
             return -1;
         }
+        #endregion
 
         public void Insert(int index, T item) {
-            if ((uint)index >= (uint)Count) throw new ArgumentOutOfRangeException();
+            if ((uint)index > (uint)Count) throw new ArgumentOutOfRangeException();
 
             if (Count == Items.Length) {
-                T[] newItems = new T[Count++];
+                T[] newItems = new T[Count + 1];
                 Array.Copy(Items, 0, newItems, 0, Count);
                 Items = newItems;
             }
@@ -96,25 +157,25 @@
             Items[index] = item;
         }
 
-        public bool Remove(T item) {
-            int itemIndex = IndexOf(item);
-            if (itemIndex < 0) return false;
+        public void Clear() {
+            if (Items != EmptyArray)
+                Items = EmptyArray;
 
-            return true;
+            Count = 0;
         }
-        public void RemoveAt(int index) {
-            if ((uint)index >= (uint)Count) throw new ArgumentOutOfRangeException();
-            if (index < Count) {
-                Array.Copy(Items, index + 1, Items, index, Count - index);
-                Count -= 1;
-                T[] target = new T[Count];
-                CopyTo(target, 0, Count);
-                Items = target;
+        public void Revers() { //bubble 
+            for (int i = 0; i < Count / 2; i += 1) {
+                T t1 = Items[i];
+                T t2 = Items[Count - 1 - i];
+                Items[i] = t2;
+                Items[Count - 1 - i] = t1;
             }
         }
+
         public IEnumerator<T> GetEnumerator() => new Enumerator(this);
         IEnumerator IEnumerable.GetEnumerator() => new Enumerator(this);
 
+        public T[] ToArray() => Items;
 
         public struct Enumerator : IEnumerator<T>, IEnumerator {
 
@@ -123,6 +184,7 @@
             private T current;
 
             public T Current { get => current; }
+            public int CurrentIndex { get => index; }
             object IEnumerator.Current { get => current; }
 
 
@@ -137,7 +199,7 @@
 
                 PerformanceList<T> localList = list;
 
-                if(((uint)index < (uint)localList.Count)) {
+                if (((uint)index < (uint)localList.Count)) {
                     current = localList.Items[index];
                     index++;
                     return true;
@@ -153,3 +215,36 @@
             }
         }
     }
+
+    public interface IPerformanceList<T>{
+         T this[int index] { get; set; }
+        
+        bool IsReadOnly { get; }
+
+        void Add(T item);
+        void AddRange(params T[] source);
+        void AddRange(IEnumerable<T> source);
+        void AddRange(int index, IEnumerable<T> source);
+
+        bool Contains(T item);
+        bool Contains(T item, int start);
+        bool Contains(T item, int start, int end);
+
+        void Insert(int index, T item);
+
+        bool Remove(T item);
+        void Remove(int index);
+
+        void CopyTo(T[] targetArray);
+        void CopyTo(T[] targetArray, int arrayIndex);
+        void CopyTo(T[] targetArray, int arrayIndex, int count);
+
+        int IndexOf(T item);
+        int IndexOf(T item, int start);
+        int IndexOf(T item, int start, int end);
+
+        void Clear();
+        void Revers();
+    }
+
+    #endregion
