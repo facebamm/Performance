@@ -1,34 +1,43 @@
-  [Serializable]
+[Serializable]
     public struct PerformanceList<T> : IList<T> {
 
-        private T[] Items;
-        private int Size;
-
         static readonly T[] EmptyArray = new T[0];
+        private T[] Items;
 
         public T this[int index] { get {
-                if ((uint)index >= (uint)Size) throw new ArgumentOutOfRangeException();
+                if ((uint)index >= (uint)Count) throw new ArgumentOutOfRangeException();
                 return Items[index];
             }
             set {
-                if ((uint)index >= (uint)Size) throw new ArgumentOutOfRangeException();
+                if ((uint)index >= (uint)Count) throw new ArgumentOutOfRangeException();
                 Items[index] = value;
             }
         }
 
-        public int Count { get => Size; }
+        public int Count { get; private set; }
         public bool IsReadOnly { get; }
 
+        public PerformanceList(int count = 0)  {
+            Items = count == 0 ? EmptyArray : new T[count];
+            Count = count;
+            IsReadOnly = false;
+        }
+
+        public PerformanceList(T[] items, int count) {
+            Items = items;
+            Count = count;
+            IsReadOnly = false;
+        }
 
         public void Add(T item) {
-            if (Size == Items.Length) {
-                T[] newItems = new T[Size++];
-                Array.Copy(Items, 0, newItems, 0, Size);
+            if (Count == Items.Length) {
+                T[] newItems = new T[Count++];
+                Array.Copy(Items, 0, newItems, 0, Count);
                 Items = newItems;
             }
 
-            Size += 1;
-            Items[Size] = item;
+            Count += 1;
+            Items[Count] = item;
         }
 
         public void Clear() {
@@ -38,11 +47,11 @@
 
         public bool Contains(T item) {
             if (item == null) {
-                for (int i = 0; i < Size; i+=1)
+                for (int i = 0; i < Count; i+=1)
                     if (Items[i] == null)  return true;
             } else {
                 EqualityComparer<T> c = EqualityComparer<T>.Default;
-                for (int i = 0; i < Size; i+=1)
+                for (int i = 0; i < Count; i+=1)
                     if (c.Equals(Items[i], item)) return true;
             }
             return false;
@@ -50,13 +59,13 @@
         public void CopyTo(T[] targetArray) => CopyTo(targetArray, 0, 0);
         public void CopyTo(T[] targetArray, int arrayIndex) => CopyTo(targetArray, arrayIndex, 0);
         public void CopyTo(T[] targetArray, int arrayIndex, int count) {
-            Array.Copy(Items, 0, targetArray, arrayIndex, Size);
+            Array.Copy(Items, 0, targetArray, arrayIndex, Count);
         }
 
-        public int IndexOf(T item) => IndexOf(item, 0, Size);
-        public int IndexOf(T item, int start) => IndexOf(item, start, Size);
+        public int IndexOf(T item) => IndexOf(item, 0, Count);
+        public int IndexOf(T item, int start) => IndexOf(item, start, Count);
         public int IndexOf(T item, int startIndex, int endIndex) {
-            int range = Size;
+            int range = Count;
 
             if(startIndex != 0 && endIndex != range)
                range = startIndex > endIndex 
@@ -71,19 +80,19 @@
         }
 
         public void Insert(int index, T item) {
-            if ((uint)index >= (uint)Size) throw new ArgumentOutOfRangeException();
+            if ((uint)index >= (uint)Count) throw new ArgumentOutOfRangeException();
 
-            if (Size == Items.Length) {
-                T[] newItems = new T[Size++];
-                Array.Copy(Items, 0, newItems, 0, Size);
+            if (Count == Items.Length) {
+                T[] newItems = new T[Count++];
+                Array.Copy(Items, 0, newItems, 0, Count);
                 Items = newItems;
             }
 
-            if (index < Size) {
-                Array.Copy(Items, index, Items, index + 1, Size - index);
+            if (index < Count) {
+                Array.Copy(Items, index, Items, index + 1, Count - index);
             }
 
-            Size += 1;
+            Count += 1;
             Items[index] = item;
         }
 
@@ -94,12 +103,12 @@
             return true;
         }
         public void RemoveAt(int index) {
-            if ((uint)index >= (uint)Size) throw new ArgumentOutOfRangeException();
-            if (index < Size) {
-                Array.Copy(Items, index + 1, Items, index, Size - index);
-                Size -= 1;
-                T[] target = new T[Size];
-                CopyTo(target, 0, Size);
+            if ((uint)index >= (uint)Count) throw new ArgumentOutOfRangeException();
+            if (index < Count) {
+                Array.Copy(Items, index + 1, Items, index, Count - index);
+                Count -= 1;
+                T[] target = new T[Count];
+                CopyTo(target, 0, Count);
                 Items = target;
             }
         }
@@ -128,13 +137,13 @@
 
                 PerformanceList<T> localList = list;
 
-                if(((uint)index < (uint)localList.Size)) {
+                if(((uint)index < (uint)localList.Count)) {
                     current = localList.Items[index];
                     index++;
                     return true;
                 }
 
-                index = list.Size + 1;
+                index = list.Count + 1;
                 current = default;
                 return false;
             }
