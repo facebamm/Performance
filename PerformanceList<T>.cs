@@ -1,6 +1,11 @@
-  #region PerformanceList 
+using System;
+using System.Collections;
+using System.Collections.Generic;
+
+namespace FabmPerformance {
+    #region PerformanceList 
     [Serializable]
-    public struct PerformanceList<T> : IPerformanceList<T>, ICollection<T>{
+    public struct PerformanceList<T> : IPerformanceList<T>, ICollection<T> {
 
         static readonly T[] EmptyArray = new T[0];
         private T[] Items;
@@ -187,7 +192,6 @@
             public int CurrentIndex { get => index; }
             object IEnumerator.Current { get => current; }
 
-
             public Enumerator(PerformanceList<T> list) {
                 this.list = list;
                 index = 0;
@@ -215,36 +219,4 @@
             }
         }
     }
-
-    public interface IPerformanceList<T>{
-         T this[int index] { get; set; }
-        
-        bool IsReadOnly { get; }
-
-        void Add(T item);
-        void AddRange(params T[] source);
-        void AddRange(IEnumerable<T> source);
-        void AddRange(int index, IEnumerable<T> source);
-
-        bool Contains(T item);
-        bool Contains(T item, int start);
-        bool Contains(T item, int start, int end);
-
-        void Insert(int index, T item);
-
-        bool Remove(T item);
-        void Remove(int index);
-
-        void CopyTo(T[] targetArray);
-        void CopyTo(T[] targetArray, int arrayIndex);
-        void CopyTo(T[] targetArray, int arrayIndex, int count);
-
-        int IndexOf(T item);
-        int IndexOf(T item, int start);
-        int IndexOf(T item, int start, int end);
-
-        void Clear();
-        void Revers();
-    }
-
-    #endregion
+}
