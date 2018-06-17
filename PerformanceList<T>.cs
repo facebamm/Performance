@@ -180,6 +180,50 @@ namespace FabmPerformance {
         public IEnumerator<T> GetEnumerator() => new Enumerator(this);
         IEnumerator IEnumerable.GetEnumerator() => new Enumerator(this);
 
+        #region Lambda/Linq
+        public void ForEach(Action<T> action) {
+            using (Enumerator en = new Enumerator(this)) {
+                while (en.MoveNext())
+                    action(en.Current);
+            }
+        }
+
+        public void ForEach(Action<T, int> action) {
+            using (Enumerator en = new Enumerator(this)) {
+                while (en.MoveNext())
+                    action(en.Current, en.CurrentIndex);
+            }
+        }
+
+        public IEnumerator<T1> Select<T1>(Func<T, T1> action) {
+            using (Enumerator en = new Enumerator(this)) {
+                while (en.MoveNext())
+                    yield return action(en.Current);
+            }
+        }
+
+        public IEnumerator<T1> Select<T1>(Func<T, int ,T1> action) {
+            using (Enumerator en = new Enumerator(this)) {
+                while (en.MoveNext())
+                    yield return action(en.Current, en.CurrentIndex);
+            }
+        }
+        public IEnumerator<T> Where(Func<T, bool> action) {
+            using (Enumerator en = new Enumerator(this)) {
+                while (en.MoveNext())
+                    if (action(en.Current))
+                        yield return en.Current;
+            }
+        }
+        public IEnumerator<T> Where(Func<T, int, bool> action) {
+            using (Enumerator en = new Enumerator(this)) {
+                while (en.MoveNext())
+                    if (action(en.Current, en.CurrentIndex))
+                        yield return en.Current;
+            }
+        }
+        #endregion
+
         public T[] ToArray() => Items;
 
         public struct Enumerator : IEnumerator<T>, IEnumerator {
@@ -200,7 +244,6 @@ namespace FabmPerformance {
 
             public void Dispose() { }
             public bool MoveNext() {
-
                 PerformanceList<T> localList = list;
 
                 if (((uint)index < (uint)localList.Count)) {
