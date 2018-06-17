@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace FabmPerformance {
     #region PerformanceList 
@@ -70,7 +72,6 @@ namespace FabmPerformance {
                     index += 1;
                 }
             }
-
         }
         #endregion
 
@@ -221,6 +222,26 @@ namespace FabmPerformance {
                     if (action(en.Current, en.CurrentIndex))
                         yield return en.Current;
             }
+        }
+        #endregion
+
+        #region Serialize
+        public void SafeToFile(string path) => SafeToFile(new FileInfo(path));
+        public void SafeToFile(FileInfo file) {
+            if (!file.Exists)
+                throw new FileNotFoundException();
+
+            BinaryFormatter formatter = new BinaryFormatter();
+            formatter.Serialize(file.Open(FileMode.CreateNew), this);
+        }
+
+        public void LoadFromFile(string path) => LoadFromFile(new FileInfo(path));
+        public void LoadFromFile(FileInfo file) {
+            if (!file.Exists)
+                throw new FileNotFoundException();
+
+            BinaryFormatter formatter = new BinaryFormatter();
+            this =  (PerformanceList<T>) formatter.Deserialize(file.OpenRead());
         }
         #endregion
 
