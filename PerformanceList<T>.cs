@@ -182,6 +182,7 @@ namespace FabmPerformance {
         IEnumerator IEnumerable.GetEnumerator() => new Enumerator(this);
 
         #region Lambda/Linq
+        #region ForEach
         public void ForEach(Action<T> action) {
             using (Enumerator en = new Enumerator(this)) {
                 while (en.MoveNext())
@@ -195,7 +196,8 @@ namespace FabmPerformance {
                     action(en.Current, en.CurrentIndex);
             }
         }
-
+        #endregion
+        #region Select
         public IEnumerator<T1> Select<T1>(Func<T, T1> action) {
             using (Enumerator en = new Enumerator(this)) {
                 while (en.MoveNext())
@@ -209,6 +211,8 @@ namespace FabmPerformance {
                     yield return action(en.Current, en.CurrentIndex);
             }
         }
+        #endregion
+        #region Where
         public IEnumerator<T> Where(Func<T, bool> action) {
             using (Enumerator en = new Enumerator(this)) {
                 while (en.MoveNext())
@@ -224,7 +228,125 @@ namespace FabmPerformance {
             }
         }
         #endregion
+        #region Sum
+        #region Int##
+        public Int16 Sum() where T : Int16 {
+            Int16 value = 0;
+            using (Enumerator en = new Enumerator(this)) {
+                while (en.MoveNext())
+                    value += en.Current;
+            }
+            return value;
+        }
 
+        public Int32 Sum() where T : Int32 {
+            Int32 value = 0;
+            using (Enumerator en = new Enumerator(this)) {
+                while (en.MoveNext())
+                    value += en.Current;
+            }
+            return value;
+        }
+
+        public Int64 Sum() where T : Int64 {
+            Int16 value = 0;
+            using (Enumerator en = new Enumerator(this)) {
+                while (en.MoveNext())
+                    value += en.Current;
+            }
+            return value;
+        }
+
+        #endregion
+        #region UInt##
+        public UInt16 Sum() where T : UInt16 {
+            UInt16 value = 0;
+            using (Enumerator en = new Enumerator(this)) {
+                while (en.MoveNext())
+                    value += en.Current;
+            }
+            return value;
+        }
+
+        public UInt32 Sum() where T : UInt32 {
+            UInt32 value = 0;
+            using (Enumerator en = new Enumerator(this)) {
+                while (en.MoveNext())
+                    value += en.Current;
+            }
+            return value;
+        }
+
+        public UInt64 Sum() where T : UInt64 {
+            UInt64 value = 0;
+            using (Enumerator en = new Enumerator(this)) {
+                while (en.MoveNext())
+                    value += en.Current;
+            }
+            return value;
+        }
+
+        #endregion
+        #region IntPtr and UIntPtr
+        public IntPtr Sum() where T : IntPtr {
+            UIntPtr value = 0;
+            using (Enumerator en = new Enumerator(this)) {
+                while (en.MoveNext())
+                    value += en.Current;
+            }
+            return value;
+        }
+        public UIntPtr Sum() where T : UIntPtr {
+            UIntPtr value = 0;
+            using (Enumerator en = new Enumerator(this)) {
+                while (en.MoveNext())
+                    value += en.Current;
+            }
+            return value;
+        }
+        #endregion
+        #region Byte and SByte
+        public Byte Sum() where T : Byte {
+            Byte value = 0;
+            using (Enumerator en = new Enumerator(this)) {
+                while (en.MoveNext())
+                    value += en.Current;
+            }
+            return value;
+        }
+
+        public SByte Sum() where T : SByte {
+            SByte value = 0;
+            using (Enumerator en = new Enumerator(this)) {
+                while (en.MoveNext())
+                    value += en.Current;
+            }
+            return value;
+        }
+        #endregion
+        #region Singel
+        public Single Sum() where T : Single {
+            Single value = 0;
+            using (Enumerator en = new Enumerator(this)) {
+                while (en.MoveNext())
+                    value += en.Current;
+            }
+            return value;
+        }
+        #endregion
+        #region Char
+        public Char Sum() where T : Char {
+            Char value = 0;
+            using (Enumerator en = new Enumerator(this)) {
+                while (en.MoveNext())
+                    value += en.Current;
+            }
+            return value;
+        }
+        #endregion
+        #endregion
+        #endregion
+        
         #region Serialize
         public void SafeToFile(string path) => SafeToFile(new FileInfo(path));
         public void SafeToFile(FileInfo file) {
@@ -260,7 +382,7 @@ namespace FabmPerformance {
             public Enumerator(PerformanceList<T> list) {
                 this.list = list;
                 index = 0;
-                current = default;
+                current = default(T);
             }
 
             public void Dispose() { }
@@ -274,7 +396,7 @@ namespace FabmPerformance {
                 }
 
                 index = list.Count + 1;
-                current = default;
+                current = default(T);
                 return false;
             }
             public void Reset() {
