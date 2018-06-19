@@ -7,7 +7,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 namespace FabmPerformance {
     #region PerformanceList 
     [Serializable]
-    public struct PerformanceList<T> : IPerformanceList<T>, ICollection<T> {
+    public struct PerformanceList<T> : ICollection<T> {
 
         static readonly T[] EmptyArray = new T[0];
         private T[] Items;
@@ -229,121 +229,97 @@ namespace FabmPerformance {
         }
         #endregion
         #region Sum
-        #region Int##
-        public Int16 Sum() where T : Int16 {
-            Int16 value = 0;
-            using (Enumerator en = new Enumerator(this)) {
-                while (en.MoveNext())
-                    value += en.Current;
+        public T Sum(){
+            TypeCode code = Type.GetTypeCode(typeof(T));
+            switch (code) {
+                case TypeCode.Char:
+                    Char valueChar = default(Char);
+                    using (Enumerator en = new Enumerator(this)) {
+                        while (en.MoveNext())
+                            valueChar += (Char)(object)en.Current;
+                    }
+                    return (T)(object)valueChar;
+                case TypeCode.SByte:
+                    SByte valueSByte = default(SByte);
+                    using (Enumerator en = new Enumerator(this)) {
+                        while (en.MoveNext())
+                            valueSByte += (SByte)(object)en.Current;
+                    }
+                    return (T)(object)valueSByte;
+                case TypeCode.Byte:
+                    SByte valueByte = default(SByte);
+                    using (Enumerator en = new Enumerator(this)) {
+                        while (en.MoveNext())
+                            valueByte += (SByte)(object)en.Current;
+                    }
+                    return (T)(object)valueByte;
+                case TypeCode.Int16:
+                    SByte valueInt16 = default(SByte);
+                    using (Enumerator en = new Enumerator(this)) {
+                        while (en.MoveNext())
+                            valueInt16 += (SByte)(object)en.Current;
+                    }
+                    return (T)(object)valueInt16;
+                case TypeCode.UInt16:
+                    SByte valueUInt16 = default(SByte);
+                    using (Enumerator en = new Enumerator(this)) {
+                        while (en.MoveNext())
+                            valueUInt16 += (SByte)(object)en.Current;
+                    }
+                    return (T)(object)valueUInt16;
+                case TypeCode.Int32:
+                    SByte valueInt32 = default(SByte);
+                    using (Enumerator en = new Enumerator(this)) {
+                        while (en.MoveNext())
+                            valueInt32 += (SByte)(object)en.Current;
+                    }
+                    return (T)(object)valueInt32;
+                case TypeCode.UInt32:
+                    SByte valueUInt32 = default(SByte);
+                    using (Enumerator en = new Enumerator(this)) {
+                        while (en.MoveNext())
+                            valueUInt32 += (SByte)(object)en.Current;
+                    }
+                    return (T)(object)valueUInt32;
+                case TypeCode.Int64:
+                    SByte valueInt64 = default(SByte);
+                    using (Enumerator en = new Enumerator(this)) {
+                        while (en.MoveNext())
+                            valueInt64 += (SByte)(object)en.Current;
+                    }
+                    return (T)(object)valueInt64;
+                case TypeCode.UInt64:
+                    SByte valueUInt64 = default(SByte);
+                    using (Enumerator en = new Enumerator(this)) {
+                        while (en.MoveNext())
+                            valueUInt64 += (SByte)(object)en.Current;
+                    }
+                    return (T)(object)valueUInt64;
+                case TypeCode.Single:
+                    SByte valueSingle = default(SByte);
+                    using (Enumerator en = new Enumerator(this)) {
+                        while (en.MoveNext())
+                            valueSingle += (SByte)(object)en.Current;
+                    }
+                    return (T)(object)valueSingle;
+                case TypeCode.Double:
+                    SByte valueDouble = default(SByte);
+                    using (Enumerator en = new Enumerator(this)) {
+                        while (en.MoveNext())
+                            valueDouble += (SByte)(object)en.Current;
+                    }
+                    return (T)(object)valueDouble;
+                case TypeCode.Decimal:
+                    SByte valueDecimal = default(SByte);
+                    using (Enumerator en = new Enumerator(this)) {
+                        while (en.MoveNext())
+                            valueDecimal += (SByte)(object)en.Current;
+                    }
+                    return (T)(object)valueDecimal;
+                default:
+                    throw new NotSupportedException();
             }
-            return value;
         }
-
-        public Int32 Sum() where T : Int32 {
-            Int32 value = 0;
-            using (Enumerator en = new Enumerator(this)) {
-                while (en.MoveNext())
-                    value += en.Current;
-            }
-            return value;
-        }
-
-        public Int64 Sum() where T : Int64 {
-            Int16 value = 0;
-            using (Enumerator en = new Enumerator(this)) {
-                while (en.MoveNext())
-                    value += en.Current;
-            }
-            return value;
-        }
-
-        #endregion
-        #region UInt##
-        public UInt16 Sum() where T : UInt16 {
-            UInt16 value = 0;
-            using (Enumerator en = new Enumerator(this)) {
-                while (en.MoveNext())
-                    value += en.Current;
-            }
-            return value;
-        }
-
-        public UInt32 Sum() where T : UInt32 {
-            UInt32 value = 0;
-            using (Enumerator en = new Enumerator(this)) {
-                while (en.MoveNext())
-                    value += en.Current;
-            }
-            return value;
-        }
-
-        public UInt64 Sum() where T : UInt64 {
-            UInt64 value = 0;
-            using (Enumerator en = new Enumerator(this)) {
-                while (en.MoveNext())
-                    value += en.Current;
-            }
-            return value;
-        }
-
-        #endregion
-        #region IntPtr and UIntPtr
-        public IntPtr Sum() where T : IntPtr {
-            UIntPtr value = 0;
-            using (Enumerator en = new Enumerator(this)) {
-                while (en.MoveNext())
-                    value += en.Current;
-            }
-            return value;
-        }
-        public UIntPtr Sum() where T : UIntPtr {
-            UIntPtr value = 0;
-            using (Enumerator en = new Enumerator(this)) {
-                while (en.MoveNext())
-                    value += en.Current;
-            }
-            return value;
-        }
-        #endregion
-        #region Byte and SByte
-        public Byte Sum() where T : Byte {
-            Byte value = 0;
-            using (Enumerator en = new Enumerator(this)) {
-                while (en.MoveNext())
-                    value += en.Current;
-            }
-            return value;
-        }
-
-        public SByte Sum() where T : SByte {
-            SByte value = 0;
-            using (Enumerator en = new Enumerator(this)) {
-                while (en.MoveNext())
-                    value += en.Current;
-            }
-            return value;
-        }
-        #endregion
-        #region Singel
-        public Single Sum() where T : Single {
-            Single value = 0;
-            using (Enumerator en = new Enumerator(this)) {
-                while (en.MoveNext())
-                    value += en.Current;
-            }
-            return value;
-        }
-        #endregion
-        #region Char
-        public Char Sum() where T : Char {
-            Char value = 0;
-            using (Enumerator en = new Enumerator(this)) {
-                while (en.MoveNext())
-                    value += en.Current;
-            }
-            return value;
-        }
-        #endregion
         #endregion
         #endregion
         
