@@ -2,7 +2,7 @@
 Version 0.5.0
 
 ##### TODO: 
-[ ]Sort
+[x]Sort
 [ ]LastIndexOf
 [ ]SplitAt
 [ ]TrueForAll
