@@ -205,7 +205,7 @@ namespace FabmPerformance {
             }
         }
 
-        public IEnumerator<T1> Select<T1>(Func<T, int ,T1> action) {
+        public IEnumerator<T1> Select<T1>(Func<T, int, T1> action) {
             using (Enumerator en = new Enumerator(this)) {
                 while (en.MoveNext())
                     yield return action(en.Current, en.CurrentIndex);
@@ -229,7 +229,7 @@ namespace FabmPerformance {
         }
         #endregion
         #region Sum
-        public T Sum(){
+        public T Sum() {
             TypeCode code = Type.GetTypeCode(typeof(T));
             switch (code) {
                 case TypeCode.Char:
@@ -321,8 +321,16 @@ namespace FabmPerformance {
             }
         }
         #endregion
+        #region Sort
+        public void Sort() {
+            Array.Sort(Items);
+        }
+        public void Sort(IComparer<T> comparer) {
+            Array.Sort(Items, comparer);
+        }
         #endregion
-        
+        #endregion
+
         #region Serialize
         public void SafeToFile(string path) => SafeToFile(new FileInfo(path));
         public void SafeToFile(FileInfo file) {
@@ -339,7 +347,7 @@ namespace FabmPerformance {
                 throw new FileNotFoundException();
 
             BinaryFormatter formatter = new BinaryFormatter();
-            this =  (PerformanceList<T>) formatter.Deserialize(file.OpenRead());
+            this = (PerformanceList<T>)formatter.Deserialize(file.OpenRead());
         }
         #endregion
 
