@@ -7,7 +7,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 namespace FabmPerformance {
     #region PerformanceList 
     [Serializable]
-    public struct PerformanceList<T> : ICollection<T> {
+    public struct PerformanceList<T> : IList<T>, ICollection<T>, IEnumerable<T>, IEnumerable {
 
         static readonly T[] EmptyArray = new T[0];
         private T[] Items;
@@ -26,6 +26,7 @@ namespace FabmPerformance {
 
         public int Count { get; private set; }
         public bool IsReadOnly { get; }
+
         #endregion
 
         #region Constructor
@@ -95,7 +96,7 @@ namespace FabmPerformance {
         #endregion
 
         #region Remove
-        private void RemoveAT(int index) => Remove(index);
+        public void RemoveAt(int index) => Remove(index);
 
         public bool Remove(T item) {
             int itemIndex = IndexOf(item);
@@ -118,9 +119,7 @@ namespace FabmPerformance {
         #region CopyTo
         public void CopyTo(T[] targetArray) => CopyTo(targetArray, 0, 0);
         public void CopyTo(T[] targetArray, int arrayIndex) => CopyTo(targetArray, arrayIndex, 0);
-        public void CopyTo(T[] targetArray, int arrayIndex, int count) {
-            Array.Copy(Items, 0, targetArray, arrayIndex, Count);
-        }
+        public void CopyTo(T[] targetArray, int arrayIndex, int count) => Array.Copy(Items, 0, targetArray, arrayIndex, Count);
         #endregion
 
         #region IndexOf
@@ -233,84 +232,84 @@ namespace FabmPerformance {
             TypeCode code = Type.GetTypeCode(typeof(T));
             switch (code) {
                 case TypeCode.Char:
-                    Char valueChar = default(Char);
+                    Char valueChar = default;
                     using (Enumerator en = new Enumerator(this)) {
                         while (en.MoveNext())
                             valueChar += (Char)(object)en.Current;
                     }
                     return (T)(object)valueChar;
                 case TypeCode.SByte:
-                    SByte valueSByte = default(SByte);
+                    SByte valueSByte = default;
                     using (Enumerator en = new Enumerator(this)) {
                         while (en.MoveNext())
                             valueSByte += (SByte)(object)en.Current;
                     }
                     return (T)(object)valueSByte;
                 case TypeCode.Byte:
-                    SByte valueByte = default(SByte);
+                    SByte valueByte = default;
                     using (Enumerator en = new Enumerator(this)) {
                         while (en.MoveNext())
                             valueByte += (SByte)(object)en.Current;
                     }
                     return (T)(object)valueByte;
                 case TypeCode.Int16:
-                    SByte valueInt16 = default(SByte);
+                    SByte valueInt16 = default;
                     using (Enumerator en = new Enumerator(this)) {
                         while (en.MoveNext())
                             valueInt16 += (SByte)(object)en.Current;
                     }
                     return (T)(object)valueInt16;
                 case TypeCode.UInt16:
-                    SByte valueUInt16 = default(SByte);
+                    SByte valueUInt16 = default;
                     using (Enumerator en = new Enumerator(this)) {
                         while (en.MoveNext())
                             valueUInt16 += (SByte)(object)en.Current;
                     }
                     return (T)(object)valueUInt16;
                 case TypeCode.Int32:
-                    SByte valueInt32 = default(SByte);
+                    SByte valueInt32 = default;
                     using (Enumerator en = new Enumerator(this)) {
                         while (en.MoveNext())
                             valueInt32 += (SByte)(object)en.Current;
                     }
                     return (T)(object)valueInt32;
                 case TypeCode.UInt32:
-                    SByte valueUInt32 = default(SByte);
+                    SByte valueUInt32 = default;
                     using (Enumerator en = new Enumerator(this)) {
                         while (en.MoveNext())
                             valueUInt32 += (SByte)(object)en.Current;
                     }
                     return (T)(object)valueUInt32;
                 case TypeCode.Int64:
-                    SByte valueInt64 = default(SByte);
+                    SByte valueInt64 = default;
                     using (Enumerator en = new Enumerator(this)) {
                         while (en.MoveNext())
                             valueInt64 += (SByte)(object)en.Current;
                     }
                     return (T)(object)valueInt64;
                 case TypeCode.UInt64:
-                    SByte valueUInt64 = default(SByte);
+                    SByte valueUInt64 = default;
                     using (Enumerator en = new Enumerator(this)) {
                         while (en.MoveNext())
                             valueUInt64 += (SByte)(object)en.Current;
                     }
                     return (T)(object)valueUInt64;
                 case TypeCode.Single:
-                    SByte valueSingle = default(SByte);
+                    SByte valueSingle = default;
                     using (Enumerator en = new Enumerator(this)) {
                         while (en.MoveNext())
                             valueSingle += (SByte)(object)en.Current;
                     }
                     return (T)(object)valueSingle;
                 case TypeCode.Double:
-                    SByte valueDouble = default(SByte);
+                    SByte valueDouble = default;
                     using (Enumerator en = new Enumerator(this)) {
                         while (en.MoveNext())
                             valueDouble += (SByte)(object)en.Current;
                     }
                     return (T)(object)valueDouble;
                 case TypeCode.Decimal:
-                    SByte valueDecimal = default(SByte);
+                    SByte valueDecimal = default;
                     using (Enumerator en = new Enumerator(this)) {
                         while (en.MoveNext())
                             valueDecimal += (SByte)(object)en.Current;
@@ -322,12 +321,8 @@ namespace FabmPerformance {
         }
         #endregion
         #region Sort
-        public void Sort() {
-            Array.Sort(Items);
-        }
-        public void Sort(IComparer<T> comparer) {
-            Array.Sort(Items, comparer);
-        }
+        public void Sort() => Array.Sort(Items);
+        public void Sort(IComparer<T> comparer) => Array.Sort(Items, comparer);
         #endregion
         #endregion
 
@@ -366,7 +361,7 @@ namespace FabmPerformance {
             public Enumerator(PerformanceList<T> list) {
                 this.list = list;
                 index = 0;
-                current = default(T);
+                current = default;
             }
 
             public void Dispose() { }
@@ -380,14 +375,16 @@ namespace FabmPerformance {
                 }
 
                 index = list.Count + 1;
-                current = default(T);
+                current = default;
                 return false;
             }
             public void Reset() {
                 index = 0;
-                current = default(T);
+                current = default;
             }
         }
+
+        
     }
 }
 #endregion
