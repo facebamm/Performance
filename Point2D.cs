@@ -1,6 +1,7 @@
 using System.Drawing;
 
 namespace Performance {
+    [Serializable]
     public struct Point2D {
         public int X { get; set; }
         public int Y { get; set; }
@@ -62,5 +63,25 @@ namespace Performance {
         public static Point2D operator /(Point2D pointA, Point2D pointB) => new Point2D(pointA.X / pointB.X,pointA.Y / pointB.Y);
         public static Point2D operator /(Point pointA, Point2D pointB) => new Point2D(pointA.X / pointB.X,pointA.Y / pointB.Y);
         public static Point2D operator /(Point2D pointA, Point pointB) => new Point2D(pointA.X / pointB.X,pointA.Y / pointB.Y);
-    }
+   
+        #region Serialize
+        public void SafeToFile(string path) => SafeToFile(new FileInfo(path));
+        public void SafeToFile(FileInfo file) {
+            if (!file.Exists)
+                throw new FileNotFoundException();
+
+            BinaryFormatter formatter = new BinaryFormatter();
+            formatter.Serialize(file.Open(FileMode.CreateNew), this);
+        }
+
+        public void LoadFromFile(string path) => LoadFromFile(new FileInfo(path));
+        public void LoadFromFile(FileInfo file) {
+            if (!file.Exists)
+                throw new FileNotFoundException();
+
+            BinaryFormatter formatter = new BinaryFormatter();
+            this = (Point2D) formatter.Deserialize(file.OpenRead());
+        }
+        #endregion
+   }
 }
