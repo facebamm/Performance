@@ -1,6 +1,6 @@
 using System.Drawing;
 
-namespace FabmPerformance {
+namespace Performance {
     public struct Point2D {
         public int X { get; set; }
         public int Y { get; set; }
