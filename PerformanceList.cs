@@ -329,9 +329,6 @@ namespace Performance {
         #region Serialize
         public void SafeToFile(string path) => SafeToFile(new FileInfo(path));
         public void SafeToFile(FileInfo file) {
-            if (!file.Exists)
-                throw new FileNotFoundException();
-
             BinaryFormatter formatter = new BinaryFormatter();
             formatter.Serialize(file.Open(FileMode.CreateNew), this);
         }
