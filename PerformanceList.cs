@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 
-namespace FabmPerformance {
+namespace Performance {
     #region PerformanceList 
     [Serializable]
     public struct PerformanceList<T> : IList<T>, ICollection<T>, IEnumerable<T>, IEnumerable {
