@@ -7,7 +7,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 namespace Performance {
     #region PerformanceList 
     [Serializable]
-    public struct PerformanceList<T> : IList<T>, ICollection<T>, IEnumerable<T>, IEnumerable {
+    public struct PerformanceList<T> {
 
         static readonly T[] EmptyArray = new T[0];
         private T[] Items;
