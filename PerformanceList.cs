@@ -6,7 +6,7 @@ using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization.Formatters.Binary;
 
-namespace Performance {
+namespace EndLessBrick.PerformanceX {
     [Serializable]
     public struct PerformanceList<T> {
 
@@ -273,11 +273,11 @@ namespace Performance {
 
 
 #if Experimental
-        private static Func<T[], T> expressiomsum;
+        private static Func<T[], T> expressionsum;
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Sum() {
-            if (expressiomsum == null) {
-                expressiomsum = (items) => {
+            if (expressionsum == null) {
+                expressionsum = (items) => {
                     ParameterExpression arrayExpr = Expression.Parameter(typeof(T[]), "array");
                     ParameterExpression iExpr = Expression.Variable(typeof(int), "i");
                     ParameterExpression rExpr = Expression.Variable(typeof(T), "result");
@@ -297,7 +297,7 @@ namespace Performance {
                 };
             }
 
-            return expressiomsum(Items); 
+            return expressionsum(Items); 
         }
 #else
         public T Sum() {
