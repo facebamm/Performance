@@ -1,9 +1,12 @@
+#define Experimental
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization.Formatters.Binary;
 
-namespace Performance  {
+namespace Performance {
     [Serializable]
     public struct PerformanceList<T> {
 
@@ -236,12 +239,30 @@ namespace Performance  {
         #region FindLast
         public T WhereLast(Func<T, T, bool> compare) {
             T tmpItem = default;
-            EqualityComparer<T> c = EqualityComparer<T>.Default;
             for (int i = 0; i < Count; i += 1) {
                 T current = Items[i];
-                tmpItem = compare(tmpItem, current) ? current : tmpItem;
-                for(int subi = i + 1; subi < Count; subi += 1) {
-                    tmpItem = compare(tmpItem, current) ? current : tmpItem;
+                if (tmpItem == null) {
+                    tmpItem = current;
+                } else {
+                    tmpItem = Equals(tmpItem, current) ? current : tmpItem;
+                    for (int subi = i + 1; subi < Count; subi += 1) {
+                        tmpItem = Equals(tmpItem, current) ? current : tmpItem;
+                    }
+                }
+            }
+            return tmpItem;
+        }
+        public T FindLastOrDefault(Func<T, T, bool> compare) {
+            T tmpItem = default;
+            for (int i = 0; i < Count; i += 1) {
+                T current = Items[i];
+                if (compare(tmpItem, current)) {
+                    tmpItem = current;
+                }
+                for (int subi = i + 1; subi < Count; subi += 1) {
+                    if (compare(tmpItem, current)) {
+                        tmpItem = current;
+                    }
                 }
             }
             return tmpItem;
@@ -249,6 +270,36 @@ namespace Performance  {
         #endregion
 
         #region Sum
+
+
+#if Experimental
+        private static Func<T[], T> expressiomsum;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T Sum() {
+            if (expressiomsum == null) {
+                expressiomsum = (items) => {
+                    ParameterExpression arrayExpr = Expression.Parameter(typeof(T[]), "array");
+                    ParameterExpression iExpr = Expression.Variable(typeof(int), "i");
+                    ParameterExpression rExpr = Expression.Variable(typeof(T), "result");
+                    LabelTarget breakLabel = Expression.Label(typeof(T));
+                    Expression block = Expression.Block(
+                        new[] { rExpr, iExpr },
+                        Expression.Loop(
+                            Expression.IfThenElse(
+                                Expression.LessThan(iExpr, Expression.ArrayLength(arrayExpr)),
+                                Expression.Block(
+                                    Expression.Assign(rExpr, Expression.Add(rExpr, Expression.ArrayAccess(arrayExpr, iExpr))),
+                                    Expression.Assign(iExpr, Expression.Increment(iExpr))),
+                                Expression.Break(breakLabel, rExpr)
+                            ),
+                            breakLabel));
+                    return Expression.Lambda<Func<T[], T>>(block, arrayExpr).Compile(false)(items);
+                };
+            }
+
+            return expressiomsum(Items); 
+        }
+#else
         public T Sum() {
             TypeCode code = Type.GetTypeCode(typeof(T));
             switch (code) {
@@ -329,7 +380,9 @@ namespace Performance  {
                     throw new NotSupportedException();
             }
         }
+#endif
         #endregion
+
         #region Sort
         public void Sort() => Array.Sort(Items);
         public void Sort(IComparer<T> comparer) => Array.Sort(Items, comparer);
