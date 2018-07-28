@@ -1,13 +1,17 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 
-namespace Performance {
-    #region PerformanceList 
+namespace EndLessBrick.PerformanceX {
     [Serializable]
     public struct PerformanceList<T> {
+
+        #region Events
+        public event Action<PerformanceList<T>, T, int> Added;
+        public event Action<PerformanceList<T>, T, int> Removed;
+        public event Action<PerformanceList<T>> Changed;
+        #endregion
 
         static readonly T[] EmptyArray = new T[0];
         private T[] Items;
@@ -34,12 +38,18 @@ namespace Performance {
             Items = new T[count];
             Count = count;
             IsReadOnly = false;
+            Added = null;
+            Removed = null;
+            Changed = null;
         }
 
         public PerformanceList(T[] items, int count) {
             Items = items;
             Count = count;
             IsReadOnly = false;
+            Added = null;
+            Removed = null;
+            Changed = null;
         }
         #endregion
 
@@ -53,9 +63,10 @@ namespace Performance {
                 Array.Copy(Items, 0, newItems, 0, Count);
                 Items = newItems;
             }
-
             Items[Count] = item;
             Count += 1;
+            Added?.Invoke(this, item, Count);
+            Changed?.Invoke(this);
         }
         public void AddRange(params T[] source) => AddRange(Count, source);
         public void AddRange(IEnumerable<T> source) => AddRange(Count, source);
@@ -66,13 +77,13 @@ namespace Performance {
             if ((uint)index > (uint)Count)
                 throw new ArgumentOutOfRangeException();
 
-
             using (IEnumerator<T> en = source.GetEnumerator()) {
                 while (en.MoveNext()) {
                     Insert(index, en.Current);
                     index += 1;
                 }
             }
+            Changed?.Invoke(this);
         }
         #endregion
 
@@ -81,14 +92,13 @@ namespace Performance {
         public bool Contains(T item, int start) => Contains(item, start, Count);
         public bool Contains(T item, int start, int end) {
             if (item == null) {
-                for (int i = start; i < end; i += 1)
+                for (int i = start; i < end; i += 1) {
                     if (Items[i] == null) return true;
+                }
             } else {
                 EqualityComparer<T> c = EqualityComparer<T>.Default;
-                using (Enumerator en = new Enumerator(this)) {
-                    while (en.MoveNext()) {
-                        if (c.Equals(en.Current, item)) return true;
-                    }
+                for (int i = 0; i < Count; i++) {
+                    if (c.Equals(Items[i], item)) return true;
                 }
             }
             return false;
@@ -107,12 +117,15 @@ namespace Performance {
         public void Remove(int index) {
             if ((uint)index >= (uint)Count) throw new ArgumentOutOfRangeException();
             Count -= 1;
+            T item = Items[index];
             if (index < Count) {
                 Array.Copy(Items, index + 1, Items, index, Count - index);
                 T[] target = new T[Count];
                 CopyTo(target, 0, Count);
                 Items = target;
             }
+            Removed?.Invoke(this, item, index);
+            Changed?.Invoke(this);
         }
         #endregion
 
@@ -135,12 +148,11 @@ namespace Performance {
                      ? start - end
                      : end - start;
             EqualityComparer<T> c = EqualityComparer<T>.Default;
-            using (Enumerator en = new Enumerator(this)) {
-                while (en.MoveNext()) {
-                    if (c.Equals(en.Current, item)) return en.CurrentIndex;
-                }
+            for (int i = 0; i < Count; i++) {
+                T current = Items[i];
+                if (c.Equals(current, item))
+                    return i;
             }
-
             return -1;
         }
         #endregion
@@ -160,6 +172,7 @@ namespace Performance {
 
             Count += 1;
             Items[index] = item;
+            Changed?.Invoke(this);
         }
 
         public void Clear() {
@@ -167,6 +180,7 @@ namespace Performance {
                 Items = EmptyArray;
 
             Count = 0;
+            Changed?.Invoke(this);
         }
         public void Revers() { //bubble 
             for (int i = 0; i < Count / 2; i += 1) {
@@ -175,144 +189,140 @@ namespace Performance {
                 Items[i] = t2;
                 Items[Count - 1 - i] = t1;
             }
+            Changed?.Invoke(this);
         }
-
-        public IEnumerator<T> GetEnumerator() => new Enumerator(this);
-        IEnumerator IEnumerable.GetEnumerator() => new Enumerator(this);
 
         #region Lambda/Linq
         #region ForEach
         public void ForEach(Action<T> action) {
-            using (Enumerator en = new Enumerator(this)) {
-                while (en.MoveNext())
-                    action(en.Current);
+            for (int i = 0; i < Count; i++) {
+                action(Items[i]);
             }
         }
-
         public void ForEach(Action<T, int> action) {
-            using (Enumerator en = new Enumerator(this)) {
-                while (en.MoveNext())
-                    action(en.Current, en.CurrentIndex);
+            for (int i = 0; i < Count; i++) {
+                action(Items[i], i);
             }
         }
         #endregion
         #region Select
-        public IEnumerator<T1> Select<T1>(Func<T, T1> action) {
-            using (Enumerator en = new Enumerator(this)) {
-                while (en.MoveNext())
-                    yield return action(en.Current);
+        public IEnumerable<T1> Select<T1>(Func<T, T1> action) {
+            for (int i = 0; i < Count; i++) {
+                yield return action(Items[i]);
             }
         }
-
-        public IEnumerator<T1> Select<T1>(Func<T, int, T1> action) {
-            using (Enumerator en = new Enumerator(this)) {
-                while (en.MoveNext())
-                    yield return action(en.Current, en.CurrentIndex);
+        public IEnumerable<T1> Select<T1>(Func<T, int, T1> action) {
+            for (int i = 0; i < Count; i++) {
+                yield return action(Items[i], i);
             }
         }
         #endregion
         #region Where
-        public IEnumerator<T> Where(Func<T, bool> action) {
-            using (Enumerator en = new Enumerator(this)) {
-                while (en.MoveNext())
-                    if (action(en.Current))
-                        yield return en.Current;
+        public IEnumerable<T> Where(Func<T, bool> action) {
+            for (int i = 0; i < Count; i++) {
+                T current = Items[i];
+                if (action(current))
+                    yield return current;
             }
         }
-        public IEnumerator<T> Where(Func<T, int, bool> action) {
-            using (Enumerator en = new Enumerator(this)) {
-                while (en.MoveNext())
-                    if (action(en.Current, en.CurrentIndex))
-                        yield return en.Current;
+        public IEnumerable<T> Where(Func<T, int, bool> action) {
+            for (int i = 0; i < Count; i++) {
+                T current = Items[i];
+                if (action(current, i))
+                    yield return current;
             }
         }
         #endregion
+        #region FindLast
+        public T WhereLast(Func<T, T, bool> compare) {
+            T tmpItem = default;
+            EqualityComparer<T> c = EqualityComparer<T>.Default;
+            for (int i = 0; i < Count; i += 1) {
+                T current = Items[i];
+                tmpItem = compare(tmpItem, current) ? current : tmpItem;
+                for(int subi = i + 1; subi < Count; subi += 1) {
+                    tmpItem = compare(tmpItem, current) ? current : tmpItem;
+                }
+            }
+            return tmpItem;
+        }
+        #endregion
+
         #region Sum
         public T Sum() {
             TypeCode code = Type.GetTypeCode(typeof(T));
             switch (code) {
                 case TypeCode.Char:
                     Char valueChar = default;
-                    using (Enumerator en = new Enumerator(this)) {
-                        while (en.MoveNext())
-                            valueChar += (Char)(object)en.Current;
+                    for (int i = 0; i < Count; i += 1) {
+                        valueChar += (Char)(object)Items[i];
                     }
                     return (T)(object)valueChar;
                 case TypeCode.SByte:
                     SByte valueSByte = default;
-                    using (Enumerator en = new Enumerator(this)) {
-                        while (en.MoveNext())
-                            valueSByte += (SByte)(object)en.Current;
+                    for (int i = 0; i < Count; i += 1) {
+                        valueSByte += (SByte)(object)Items[i];
                     }
                     return (T)(object)valueSByte;
                 case TypeCode.Byte:
-                    SByte valueByte = default;
-                    using (Enumerator en = new Enumerator(this)) {
-                        while (en.MoveNext())
-                            valueByte += (SByte)(object)en.Current;
+                    Byte valueByte = default;
+                    for (int i = 0; i < Count; i += 1) {
+                        valueByte += (Byte)(object)Items[i];
                     }
                     return (T)(object)valueByte;
                 case TypeCode.Int16:
-                    SByte valueInt16 = default;
-                    using (Enumerator en = new Enumerator(this)) {
-                        while (en.MoveNext())
-                            valueInt16 += (SByte)(object)en.Current;
+                    Int16 valueInt16 = default;
+                    for (int i = 0; i < Count; i += 1) {
+                        valueInt16 += (Int16)(object)Items[i];
                     }
                     return (T)(object)valueInt16;
                 case TypeCode.UInt16:
-                    SByte valueUInt16 = default;
-                    using (Enumerator en = new Enumerator(this)) {
-                        while (en.MoveNext())
-                            valueUInt16 += (SByte)(object)en.Current;
+                    UInt16 valueUInt16 = default;
+                    for (int i = 0; i < Count; i += 1) {
+                        valueUInt16 += (UInt16)(object)Items[i];
                     }
                     return (T)(object)valueUInt16;
                 case TypeCode.Int32:
-                    SByte valueInt32 = default;
-                    using (Enumerator en = new Enumerator(this)) {
-                        while (en.MoveNext())
-                            valueInt32 += (SByte)(object)en.Current;
+                    Int32 valueInt32 = default;
+                    for (int i = 0; i < Count; i += 1) {
+                        valueInt32 += (Int32)(object)Items[i];
                     }
                     return (T)(object)valueInt32;
                 case TypeCode.UInt32:
-                    SByte valueUInt32 = default;
-                    using (Enumerator en = new Enumerator(this)) {
-                        while (en.MoveNext())
-                            valueUInt32 += (SByte)(object)en.Current;
+                    UInt32 valueUInt32 = default;
+                    for (int i = 0; i < Count; i += 1) {
+                        valueUInt32 += (UInt32)(object)Items[i];
                     }
                     return (T)(object)valueUInt32;
                 case TypeCode.Int64:
-                    SByte valueInt64 = default;
-                    using (Enumerator en = new Enumerator(this)) {
-                        while (en.MoveNext())
-                            valueInt64 += (SByte)(object)en.Current;
+                    Int64 valueInt64 = default;
+                    for (int i = 0; i < Count; i += 1) {
+                        valueInt64 += (Int64)(object)Items[i];
                     }
                     return (T)(object)valueInt64;
+
                 case TypeCode.UInt64:
-                    SByte valueUInt64 = default;
-                    using (Enumerator en = new Enumerator(this)) {
-                        while (en.MoveNext())
-                            valueUInt64 += (SByte)(object)en.Current;
+                    UInt64 valueUInt64 = default;
+                    for (int i = 0; i < Count; i += 1) {
+                        valueUInt64 += (UInt64)(object)Items[i];
                     }
                     return (T)(object)valueUInt64;
                 case TypeCode.Single:
-                    SByte valueSingle = default;
-                    using (Enumerator en = new Enumerator(this)) {
-                        while (en.MoveNext())
-                            valueSingle += (SByte)(object)en.Current;
+                    Single valueSingle = default;
+                    for (int i = 0; i < Count; i += 1) {
+                        valueSingle += (Single)(object)Items[i];
                     }
                     return (T)(object)valueSingle;
                 case TypeCode.Double:
-                    SByte valueDouble = default;
-                    using (Enumerator en = new Enumerator(this)) {
-                        while (en.MoveNext())
-                            valueDouble += (SByte)(object)en.Current;
+                    Double valueDouble = default;
+                    for (int i = 0; i < Count; i += 1) {
+                        valueDouble += (Double)(object)Items[i];
                     }
                     return (T)(object)valueDouble;
                 case TypeCode.Decimal:
-                    SByte valueDecimal = default;
-                    using (Enumerator en = new Enumerator(this)) {
-                        while (en.MoveNext())
-                            valueDecimal += (SByte)(object)en.Current;
+                    Decimal valueDecimal = default;
+                    for (int i = 0; i < Count; i += 1) {
+                        valueDecimal += (Decimal)(object)Items[i];
                     }
                     return (T)(object)valueDecimal;
                 default:
@@ -345,43 +355,5 @@ namespace Performance {
 
         public T[] ToArray() => Items;
 
-        public struct Enumerator : IEnumerator<T>, IEnumerator {
-
-            private PerformanceList<T> list;
-            private int index;
-            private T current;
-
-            public T Current { get => current; }
-            public int CurrentIndex { get => index; }
-            object IEnumerator.Current { get => current; }
-
-            public Enumerator(PerformanceList<T> list) {
-                this.list = list;
-                index = 0;
-                current = default;
-            }
-
-            public void Dispose() { }
-            public bool MoveNext() {
-                PerformanceList<T> localList = list;
-
-                if (((uint)index < (uint)localList.Count)) {
-                    current = localList.Items[index];
-                    index++;
-                    return true;
-                }
-
-                index = list.Count + 1;
-                current = default;
-                return false;
-            }
-            public void Reset() {
-                index = 0;
-                current = default;
-            }
-        }
-
-        
     }
 }
-#endregion
