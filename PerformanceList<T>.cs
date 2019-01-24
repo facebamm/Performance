@@ -17,7 +17,7 @@ public unsafe struct PerformanceList<T> : IList<T> where T : unmanaged  {
     public static readonly T[] EmptyArray = new T[_defaultCapacity];
     public T[] Items;
 
-    #region Properties
+    //Properties
     public T this[int index] {
         get {
             if ((uint)index >= (uint)Count) throw new ArgumentOutOfRangeException();
@@ -32,10 +32,9 @@ public unsafe struct PerformanceList<T> : IList<T> where T : unmanaged  {
     public int Count { get; private set; }
     public bool IsReadOnly { get; }
 
-    private int Capcity;
-    #endregion
+    private int Capacity;
 
-    #region Constructor
+    //Constructor
 
     //private PerformanceList() {
     //    Count = 0;
@@ -45,24 +44,24 @@ public unsafe struct PerformanceList<T> : IList<T> where T : unmanaged  {
     //}
     public PerformanceList(int count = 0) : this() {
         Count = count;
-        Capcity = count > _defaultCapacity ? Count : _defaultCapacity;
-        Items = new T[Capcity];
+        Capacity = count > _defaultCapacity ? Count : _defaultCapacity;
+        Items = new T[Capacity];
         IsReadOnly = false;
     }
     public PerformanceList(T[] items) {
         Count = items.Length;
-        Capcity = items.Length;
+        Capacity = items.Length;
         Items = items;
         IsReadOnly = false;
     }
-    #endregion
+    
 
-    #region Add
+    //Add
     [__DynamicallyInvokable]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Add(T item) {
-        if (Count == Capcity) {
-            T[] newItems = new T[Capcity *= 2];
+        if (Count == Capacity) {
+            T[] newItems = new T[Capacity *= 2];
             Array.Copy(Items, 0, newItems, 0, Count);
             Items = newItems;
         }
@@ -102,9 +101,8 @@ public unsafe struct PerformanceList<T> : IList<T> where T : unmanaged  {
         Items[index] = item;*/
         //Changed?.Invoke(this);
     }
-    #endregion
 
-    #region Contains
+    //Contains
     public bool Contains(T item) => Contains(item, 0, Count);
     public bool Contains(T item, int start) => Contains(item, start, Count);
     public bool Contains(T item, int start, int end) {
@@ -126,9 +124,8 @@ public unsafe struct PerformanceList<T> : IList<T> where T : unmanaged  {
         }
         return false;
     }
-    #endregion
 
-    #region Remove
+    //Remove
     public void RemoveAt(int index) => Remove(index);
 
     public bool Remove(T item) {
@@ -150,15 +147,13 @@ public unsafe struct PerformanceList<T> : IList<T> where T : unmanaged  {
         //Removed?.Invoke(this, item, index);
         //Changed?.Invoke(this);
     }
-    #endregion
 
-    #region CopyTo
+    //CopyTo
     public void CopyTo(T[] targetArray) => CopyTo(targetArray, 0, 0);
     public void CopyTo(T[] targetArray, int arrayIndex) => CopyTo(targetArray, arrayIndex, 0);
     public void CopyTo(T[] targetArray, int arrayIndex, int count) => Array.Copy(Items, 0, targetArray, arrayIndex, Count);
-    #endregion
 
-    #region IndexOf
+    //IndexOf
     public int IndexOf(T item) => IndexOf(item, 0, Count);
     public int IndexOf(T item, int start) => IndexOf(item, start, Count);
     public unsafe int IndexOf(T item, int start, int end) {
@@ -178,7 +173,6 @@ public unsafe struct PerformanceList<T> : IList<T> where T : unmanaged  {
         }
         return -1;
     }
-    #endregion
 
     public void Insert(int index, T item) {
         if ((uint)index > (uint)Count) throw new ArgumentOutOfRangeException();
