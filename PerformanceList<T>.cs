@@ -214,7 +214,7 @@ public unsafe struct PerformanceList<T> : IList<T> where T : unmanaged  {
         //Changed?.Invoke(this);
     }
 
-    public void Revers() { //bubble 
+    public void Reverse() { //bubble 
         fixed (T* itemsPtr = Items) {
             for (int iElement = 0, nElement = Count / 2; iElement < nElement; iElement += 1) {
                 T t1 = *(itemsPtr + iElement);
